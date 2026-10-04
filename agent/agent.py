@@ -12,8 +12,8 @@ SYSTEM_PROMPT = (
 _model = ChatAnthropic(model=MODEL, temperature=0)
 
 
-def build_agent(tools: list):
-    return create_agent(_model, tools, system_prompt=SYSTEM_PROMPT)
+def build_agent(tools: list, checkpointer=None):
+    return create_agent(_model, tools, system_prompt=SYSTEM_PROMPT, checkpointer=checkpointer)
 
 
 def run_turn(agent, messages: list, text: str) -> list:

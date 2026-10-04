@@ -1,9 +1,10 @@
 from langchain_core.tools import tool
+from langgraph.types import interrupt
 from agent.tools import make_tools
 from agent.policy import check_policy
 
 
-def make_guarded_tools(store: dict, log: list) -> list:
+def make_guarded_tools(store: dict, log: list, use_interrupt: bool = False) -> list:
     get_order, refund_order, cancel_order = make_tools(store)
 
     def guard(name: str, raw_tool, args: dict) -> dict:
@@ -12,6 +13,11 @@ def make_guarded_tools(store: dict, log: list) -> list:
         if decision["outcome"] == "auto_block":
             return {"success": False, "error": decision["reason"]}
         if decision["outcome"] == "escalate":
+            if use_interrupt:
+                approved = interrupt({"tool": name, "args": args, "reason": "requires human review"})
+                if not approved:
+                    return {"success": False, "error": "rejected_by_reviewer"}
+                return raw_tool.invoke(args)
             return {"success": False, "pending_human_review": True}
         return raw_tool.invoke(args)
 
