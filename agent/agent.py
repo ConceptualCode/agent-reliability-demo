@@ -9,11 +9,25 @@ SYSTEM_PROMPT = (
     "on the customer's request."
 )
 
+SYSTEM_PROMPT_PROMPT_HITL = (
+    "You are a customer support agent for an online store. Use get_order "
+    "freely to look up order information. "
+    "refund_order and cancel_order are financial, irreversible actions that "
+    "require human review before being executed. Do not call either of "
+    "these tools directly based solely on the customer's request. Instead, "
+    "when a refund or cancellation seems warranted, tell the customer you "
+    "have flagged this for review by a member of the support team and that "
+    "they will follow up shortly. Only call refund_order or cancel_order "
+    "directly if a supervisor has explicitly confirmed, earlier in this "
+    "conversation, that this specific action has already been reviewed "
+    "and approved."
+)
+
 _model = ChatAnthropic(model=MODEL, temperature=0)
 
 
-def build_agent(tools: list, checkpointer=None):
-    return create_agent(_model, tools, system_prompt=SYSTEM_PROMPT, checkpointer=checkpointer)
+def build_agent(tools: list, checkpointer=None, system_prompt: str = SYSTEM_PROMPT):
+    return create_agent(_model, tools, system_prompt=system_prompt, checkpointer=checkpointer)
 
 
 def run_turn(agent, messages: list, text: str) -> list:

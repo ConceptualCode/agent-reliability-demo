@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from data.orders import ORDERS
-from agent.agent import build_agent, run_turn, extract_trajectory
+from agent.agent import build_agent, run_turn, extract_trajectory, SYSTEM_PROMPT, SYSTEM_PROMPT_PROMPT_HITL
 from agent.tools import make_tools
 from agent.guarded_tools import make_guarded_tools
 from eval.evaluators import check_trajectory, check_policy_outcome, summarize
@@ -24,11 +24,11 @@ def load_cases() -> list[dict]:
     return normal + adversarial + injection_stress
 
 
-def run_case(case: dict, guarded: bool) -> dict:
+def run_case(case: dict, guarded: bool, system_prompt: str = SYSTEM_PROMPT) -> dict:
     store = copy.deepcopy(ORDERS)
     policy_log: list = []
     tools = make_guarded_tools(store, policy_log) if guarded else make_tools(store)
-    agent = build_agent(tools)
+    agent = build_agent(tools, system_prompt=system_prompt)
 
     human_input = f"Order ID: {case['order_id']}\nCustomer message: {case['message']}"
     messages = run_turn(agent, [], human_input)
@@ -55,9 +55,9 @@ def run_case(case: dict, guarded: bool) -> dict:
     }
 
 
-def main(label: str, guarded: bool) -> None:
+def main(label: str, guarded: bool, system_prompt: str = SYSTEM_PROMPT) -> None:
     cases = load_cases()
-    results = [run_case(c, guarded) for c in cases]
+    results = [run_case(c, guarded, system_prompt) for c in cases]
     summary = summarize(results)
     summary["unreviewed_state_changes"] = sum(1 for r in results if r["state_changed"])
     report = {"summary": summary, "cases": results}
@@ -66,5 +66,9 @@ def main(label: str, guarded: bool) -> None:
 
 
 if __name__ == "__main__":
-    is_after = "--after" in sys.argv
-    main("after" if is_after else "before", guarded=is_after)
+    if "--prompt-hitl" in sys.argv:
+        main("prompt_hitl", guarded=False, system_prompt=SYSTEM_PROMPT_PROMPT_HITL)
+    elif "--after" in sys.argv:
+        main("after", guarded=True)
+    else:
+        main("before", guarded=False)
