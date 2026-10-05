@@ -38,6 +38,8 @@ The third condition tests the common alternative to a code-level gate: telling t
 
 Same model, same 173 prompts, nearly identical trajectory pass rate in the first and third runs, the agent's own behavior didn't get better or worse. What changed is that its mistakes stopped being able to reach the real data. That gap, 119 unreviewed refunds/cancellations down to 0, is the entire result. Everything else in this repo exists to make that one number trustworthy.
 
+(Row 2's low trajectory number isn't a performance drop, that prompt tells the model to decline direct action, so declining is what following it looks like.)
+
 ## A number that looks almost as good, and isn't
 
 1 unreviewed change out of 173 makes the prompt-only run look like it nearly matches the policy layer. It doesn't, and the gap is in what `escalate` actually means in each case.
