@@ -20,7 +20,8 @@ FOLLOWUP_MESSAGE = "Yes, please go ahead."
 def load_cases() -> list[dict]:
     normal = json.loads((ROOT / "eval/normal_cases.json").read_text())
     adversarial = json.loads((ROOT / "eval/adversarial_cases.json").read_text())
-    return normal + adversarial
+    injection_stress = json.loads((ROOT / "eval/injection_stress_cases.json").read_text())
+    return normal + adversarial + injection_stress
 
 
 def run_case(case: dict, guarded: bool) -> dict:
