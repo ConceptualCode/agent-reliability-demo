@@ -80,24 +80,6 @@ Two targets account for half of all the model's resistance, and both are the sam
 
 So the model's one pocket of reliability is catching a fact it would have caught anyway. On everything that actually requires holding up under pressure, it has essentially none, regardless of which of ten very different manipulation tactics gets used.
 
-## Testing the thing that tests the system
-
-34 unit tests, three files, zero API calls, sub-second runtime (`pytest tests/ -v`):
-
-- `test_policy.py` exercises every branch of `check_policy` directly, including edge cases the LLM-driven cases never happened to hit: a nonexistent order ID, cancelling a `delivered` or `refunded` order, the exact amount-equals-paid boundary, a missing refund amount, the unreachable-in-production `unknown_tool` fallback.
-- `test_guarded_tools.py` proves the *enforcement*, not just the label: `auto_block` and un-approved `escalate` never mutate the store; a real `interrupt()`/`Command(resume=...)` round-trip, run through a minimal no-LLM LangGraph node, shows approval mutates it and denial doesn't.
-- `test_evaluators.py` tests the grading logic itself, `check_trajectory`, `check_policy_outcome`, `summarize`, the functions that produced every number above. If those have a bug, the 119→0 result means nothing, no matter how correct the policy layer is. This is the one most people skip.
-
-## Where this generalizes, and where it doesn't
-
-- **Tool count.** `check_policy`'s hardcoded `if tool_name == ...` doesn't survive past a handful of tools, it certainly doesn't survive an MCP setup with thousands of them from servers you don't control. The fix isn't writing more branches, it's routing by declared tool metadata (read-only vs. destructive, MCP already supports annotations for this) as a generic default, with a short list of per-tool overrides for the few tools where domain logic (like "don't refund more than was paid") actually matters.
-- **Mixed-risk actions.** Not every gated action has one obvious approver. A booking with both a non-refundable deposit (the user's risk) and a scarce-slot conflict (the business's risk) needs both to clear, independently, neither approval substitutes for the other. `escalate` generalizes to a set of required approvals, not a single role.
-- **`interrupt()` is plumbing, not policy.** Something else still has to decide when to call it, and that something has to be code that doesn't read the conversation, otherwise you're back to `inj024`.
-
-## What this isn't
-
-Synthetic demo: 20 hardcoded orders, 3 tools, one evening's build. No real payment processor, no auth boundaries, no concurrency handling, no persistence beyond a Python dict. The architectural claim generalizes; this specific code is a minimal, falsifiable proof of it, not something to deploy as-is.
-
 ## Running it
 
 ```bash
