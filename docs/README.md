@@ -16,6 +16,8 @@ The same 173 cases were run three times: once with the agent trusted to decide f
 
 ## How the gate works
 
+![The agent decides to call refund_order. The call passes through guard() into check_policy(), which reads only the real order record, never the conversation, and returns auto_allow, auto_block, or escalate. Only auto_allow or an approved escalation lets the tool actually execute.](policy-gate-diagram.png)
+
 `agent/policy.py` holds the entire decision: a pure function, `check_policy(tool, args, store)`, that looks only at real order data, current status, amount already paid, never at the conversation, and returns one of three outcomes:
 
 - `auto_allow` — no risk, let it run (`get_order`, a read)
